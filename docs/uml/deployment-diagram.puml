@@ -1,0 +1,28 @@
+@startuml Deployment Diagram
+
+skinparam componentStyle uml2
+skinparam nodeBackgroundColor #F0F8FF
+
+cloud "Railway Platform" {
+    node "PHP 8.3 Runtime" {
+        component "Symfony 7.2 Application" {
+            component "API Platform"
+            component "Doctrine ORM"
+            component "Order Management System"
+        }
+    }
+    
+    database "SQLite Database" {
+        [Orders]
+        [OrderItems]
+    }
+}
+
+node "Client" {
+    component "HTTP Client" 
+}
+
+"HTTP Client" --> "API Platform" : HTTP/HTTPS
+"Order Management System" --> "SQLite Database" : Persistence
+
+@enduml 

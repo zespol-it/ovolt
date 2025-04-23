@@ -1,6 +1,14 @@
 # Order Management System API
 
-A simple order management system built with Symfony 6.4 and API Platform. This system allows managing customer orders through a RESTful API.
+A simple order management system built with Symfony 7.2 and API Platform. This system allows managing customer orders through a RESTful API.
+
+## System Architecture
+
+### Class Diagram
+![Class Diagram](docs/diagrams/class-diagram.png)
+
+### Deployment Diagram
+![Deployment Diagram](docs/diagrams/deployment-diagram.png)
 
 ## Features
 
@@ -51,10 +59,16 @@ php -S localhost:8000 -t public/
 
 ## API Endpoints
 
-### 1. Create Order
-```bash
+### API Endpoints Details
+
+#### 1. Create Order (POST /api/orders)
+Creates a new order with items.
+
+**Request:**
+```http
 POST /api/orders
 Content-Type: application/ld+json
+Accept: application/ld+json
 
 {
   "items": [
@@ -68,37 +82,173 @@ Content-Type: application/ld+json
 }
 ```
 
-### 2. Get All Orders
-```bash
+**Response:** (201 Created)
+```json
+{
+  "@context": "/api/contexts/Order",
+  "@id": "/api/orders/{id}",
+  "@type": "Order",
+  "id": "uuid",
+  "createdAt": "2024-03-15T10:00:00+00:00",
+  "status": "new",
+  "items": [
+    {
+      "@id": "/api/order_items/{id}",
+      "@type": "OrderItem",
+      "id": 1,
+      "productId": "1",
+      "productName": "Test Product",
+      "price": "100.00",
+      "quantity": 2
+    }
+  ],
+  "total": "200.00"
+}
+```
+
+#### 2. Get Orders List (GET /api/orders)
+Retrieves a list of all orders with pagination.
+
+**Request:**
+```http
 GET /api/orders
+Accept: application/ld+json
 ```
 
-Filtering and sorting options:
-- Filter by status: `GET /api/orders?status=paid`
-- Sort by creation date: `GET /api/orders?order[createdAt]=desc`
+**Optional Query Parameters:**
+- `status`: Filter by order status (new, paid, shipped, cancelled)
+- `order[createdAt]`: Sort by creation date (asc, desc)
+- `page`: Page number (default: 1)
+- `itemsPerPage`: Items per page (default: 30)
 
-### 3. Get Single Order
-```bash
+**Response:** (200 OK)
+```json
+{
+  "@context": "/api/contexts/Order",
+  "@id": "/api/orders",
+  "@type": "hydra:Collection",
+  "hydra:member": [
+    {
+      "@id": "/api/orders/{id}",
+      "@type": "Order",
+      "id": "uuid",
+      "createdAt": "2024-03-15T10:00:00+00:00",
+      "status": "new",
+      "items": [...],
+      "total": "200.00"
+    }
+  ],
+  "hydra:totalItems": 1
+}
+```
+
+#### 3. Get Single Order (GET /api/orders/{id})
+Retrieves details of a specific order.
+
+**Request:**
+```http
 GET /api/orders/{id}
+Accept: application/ld+json
 ```
 
-### 4. Update Order Status
-```bash
+**Response:** (200 OK)
+```json
+{
+  "@context": "/api/contexts/Order",
+  "@id": "/api/orders/{id}",
+  "@type": "Order",
+  "id": "uuid",
+  "createdAt": "2024-03-15T10:00:00+00:00",
+  "status": "new",
+  "items": [...],
+  "total": "200.00"
+}
+```
+
+#### 4. Update Order Status (PATCH /api/orders/{id})
+Updates the status of an existing order.
+
+**Request:**
+```http
 PATCH /api/orders/{id}
 Content-Type: application/merge-patch+json
+Accept: application/ld+json
 
 {
   "status": "paid"
 }
 ```
 
-## Order Status Flow
+**Response:** (200 OK)
+```json
+{
+  "@context": "/api/contexts/Order",
+  "@id": "/api/orders/{id}",
+  "@type": "Order",
+  "id": "uuid",
+  "createdAt": "2024-03-15T10:00:00+00:00",
+  "status": "paid",
+  "items": [...],
+  "total": "200.00"
+}
+```
 
-The system implements the following status transitions:
+### Error Responses
+
+#### 400 Bad Request
+```json
+{
+  "@context": "/api/contexts/Error",
+  "@type": "hydra:Error",
+  "hydra:title": "An error occurred",
+  "hydra:description": "Invalid input data"
+}
+```
+
+#### 404 Not Found
+```json
+{
+  "@context": "/api/contexts/Error",
+  "@type": "hydra:Error",
+  "hydra:title": "Not Found",
+  "hydra:description": "Order not found"
+}
+```
+
+#### 422 Unprocessable Entity
+```json
+{
+  "@context": "/api/contexts/ConstraintViolationList",
+  "@type": "ConstraintViolationList",
+  "hydra:title": "An error occurred",
+  "hydra:description": "status: Invalid status transition from \"shipped\" to \"new\".",
+  "violations": [
+    {
+      "propertyPath": "status",
+      "message": "Invalid status transition from \"shipped\" to \"new\"."
+    }
+  ]
+}
+```
+
+### Status Transitions
+Valid status transitions are:
 - `new` → `paid`, `cancelled`
 - `paid` → `shipped`, `cancelled`
 - `shipped` → `cancelled`
 - `cancelled` → (no further transitions allowed)
+
+## Order Status Flow
+
+The system implements the following status transitions:
+```mermaid
+graph LR
+    NEW --> PAID
+    NEW --> CANCELLED
+    PAID --> SHIPPED
+    PAID --> CANCELLED
+    SHIPPED --> CANCELLED
+```
 
 ## Data Model
 
@@ -125,59 +275,8 @@ php bin/phpunit
 
 ## API Documentation
 
-Access the API documentation at: 
-
-## Development
-
-### Adding New Features
-
-1. Create new entities in `src/Entity/`
-2. Create migrations:
-```bash
-php bin/console make:migration
+### Interactive Documentation
+Access the Swagger/OpenAPI documentation interface at:
 ```
-
-3. Apply migrations:
-```bash
-php bin/console doctrine:migrations:migrate
+http://localhost:8000/api
 ```
-
-### Running Tests
-
-1. Unit tests:
-```bash
-php bin/phpunit tests/Entity
-```
-
-2. Load test fixtures:
-```bash
-php bin/console doctrine:fixtures:load
-```
-
-## Security
-
-- Input validation is implemented for all endpoints
-- Status transitions are validated
-- Decimal values are properly handled for prices
-
-## Error Handling
-
-The API returns appropriate HTTP status codes:
-- 200: Success
-- 201: Resource created
-- 400: Invalid input
-- 404: Resource not found
-- 415: Unsupported media type
-- 422: Unprocessable entity (validation failed)
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a new Pull Request
-
-## License
-
-[Your License Here]

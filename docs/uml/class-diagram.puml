@@ -1,0 +1,90 @@
+@startuml Order Management System
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam classBackgroundColor #F0F8FF
+
+class Order {
+    - id: Uuid
+    - createdAt: DateTimeImmutable
+    - status: string
+    - items: Collection<OrderItem>
+    - total: float
+    + __construct()
+    + getId(): ?Uuid
+    + getCreatedAt(): DateTimeImmutable
+    + getStatus(): string
+    + setStatus(string): self
+    + getItems(): Collection
+    + addItem(OrderItem): self
+    + removeItem(OrderItem): self
+    + getTotal(): float
+    - recalculateTotal(): void
+    + getOriginalStatus(): ?string
+}
+
+class OrderItem {
+    - id: int
+    - productId: string
+    - productName: string
+    - price: float
+    - quantity: int
+    - order: Order
+    + getId(): ?int
+    + getProductId(): string
+    + setProductId(string): self
+    + getProductName(): string
+    + setProductName(string): self
+    + getPrice(): float
+    + setPrice(float): self
+    + getQuantity(): int
+    + setQuantity(int): self
+    + getOrder(): ?Order
+    + setOrder(?Order): self
+}
+
+class OrderStatusTransition {
+    + message: string
+    + validate()
+}
+
+class OrderStatusTransitionValidator {
+    - ALLOWED_TRANSITIONS: array
+    + validate(value, constraint)
+}
+
+class OrderService {
+    - entityManager: EntityManagerInterface
+    + __construct(EntityManagerInterface)
+    + createOrder(array): Order
+    + updateOrderStatus(Order, string): Order
+    + getOrder(string): Order
+}
+
+enum OrderStatus {
+    NEW
+    PAID
+    SHIPPED
+    CANCELLED
+}
+
+Order "1" *-- "many" OrderItem : contains >
+Order -- OrderStatus : has >
+OrderStatusTransition -- OrderStatusTransitionValidator : validates >
+Order -- OrderService : manages >
+
+note right of Order
+  Status transitions:
+  new → paid, cancelled
+  paid → shipped, cancelled
+  shipped → cancelled
+  cancelled → (no transitions)
+end note
+
+note right of OrderItem
+  Prices are stored as strings
+  internally but handled as
+  floats in the application
+end note
+
+@enduml 

@@ -1,0 +1,12 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "composer install --no-dev"
+
+[deploy]
+startCommand = "php bin/console cache:clear && php bin/console doctrine:schema:update --force && php -S 0.0.0.0:$PORT -t public/"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+[env]
+PHP_VERSION = "8.3"
+APP_ENV = "prod" 
