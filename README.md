@@ -14,8 +14,8 @@ A simple order management system built with Symfony 6.4 and API Platform. This s
 
 ## Technical Stack
 
-- PHP 8.1+
-- Symfony 6.4
+- PHP 8.3+
+- Symfony 7.2
 - API Platform
 - Doctrine ORM
 - SQLite database
