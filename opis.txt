@@ -1,0 +1,101 @@
+# Zadanie testowe: System zarządzania zamówieniami
+
+Twoim zadaniem jest stworzenie prostego systemu zarządzania zamówieniami za pomocą api-platform.com (PHP,Symfony).
+Baza danych: pliki
+Skup się na jakości kodu, czytelności oraz zgodności ze wzorcami projektowymi.
+
+# Opis aplikacji:
+Wyobraź sobie, że budujesz API dla małego sklepu, który obsługuje zamówienia klientów. 
+System powinien pozwolić na:
+- Złożenie zamówienia przez klienta.
+- Pobranie szczegółów zamówienia (np. status, łączna cena).
+- Zmianę statusu zamówienia.
+
+# Wymagania funkcjonalne:
+1. Model zamówienia (Order):
+
+Zamówienie powinno mieć następujące pola: 
+- id (UUID) 
+- createdAt (data utworzenia - DateTime) 
+- status (ENUM: “new”, “paid”, “shipped”, “cancelled”)
+- items (lista pozycji w zamówieniu: id produktu, nazwa produktu, cena jednostkowa, ilość) - total (suma wszystkich pozycji zamówienia)
+
+2. Akcje API:
+2.1 POST /orders Złóż nowe zamówienie.
+Przykładowe dane wejściowe:
+{
+    "items": [
+        {
+            "productId": "1",
+            "productName": "Product A",
+            "price": 100,
+            "quantity": 2
+        },
+        {
+            "productId": "2",
+            "productName": "Product B",
+            "price": 50,
+            "quantity": 1
+        }
+    ]
+}
+Wynik: Zwróć szczegóły zamówienia oraz sumę total.
+
+2.2 GET /orders/{id} Pobierz szczegóły zamówienia po jego id.
+
+2.3 PATCH /orders/{id} Zmień status zamówienia (np. z “new” na “paid”).
+Przykładowy request:
+{
+"status": "paid"
+}
+
+# Wymagania techniczne:
+
+- api-platform.com
+- Kod: Projekt ma stosować wzorzec projektowy (np. Factory, Repository, Service, itp.).
+- Baza danych: Możesz użyć Doctrine ORM do przechowywania danych.
+- Testy: Napisz przynajmniej jeden test jednostkowy.
+- Dobre praktyki:
+-- Kod powinien być zgodny z PSR.
+-- Powinieneś zadbać o walidację danych wejściowych (napisz np. Custom Validator lub użyj wbudowanych mechanizmów Symfony Validation).
+-- Podziel logikę w sposób czytelny i zgodny z zasadami SOLID.
+
+//==========
+
+php -S localhost:8000 -t public/
+
+curl -X POST \
+  -H "Content-Type: application/ld+json" \
+  -H "Accept: application/ld+json" \
+  http://localhost:8000/api/orders \
+  -d '{
+    "items": [
+      {
+        "productId": "1",
+        "productName": "Test Product",
+        "price": "100.00",
+        "quantity": 2
+      }
+    ]
+  }'
+
+curl -H "Accept: application/ld+json" http://localhost:8000/api/orders
+
+curl -H "Accept: application/ld+json" http://localhost:8000/api/orders/{id}
+curl -H "Accept: application/ld+json" http://localhost:8000/api/orders/59b4a841-e64d-4e80-ab91-d69a7af5b59c
+
+curl -X PATCH \
+  -H "Content-Type: application/ld+json" \
+  -H "Accept: application/ld+json" \
+  http://localhost:8000/api/orders/{id} \
+  -d '{
+    "status": "paid"
+  }'
+
+curl -X PATCH \
+  -H "Content-Type: application/merge-patch+json" \
+  -H "Accept: application/ld+json" \
+  http://localhost:8000/api/orders/59b4a841-e64d-4e80-ab91-d69a7af5b59c \
+  -d '{
+    "status": "paid"
+  }'
