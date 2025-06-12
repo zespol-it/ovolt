@@ -5,10 +5,10 @@ A simple order management system built with Symfony 7.2 and API Platform. This s
 ## System Architecture
 
 ### Class Diagram
-![Class Diagram](docs/uml/Deployment Diagram.png)
+![Class Diagram](docs/uml/Deployment%20Diagram.png)
 
 ### Deployment Diagram
-![Deployment Diagram](docs/uml/Order Management System.png)
+![Deployment Diagram](docs/uml/Order%20Management%20System.png)
 
 ## Features
 
